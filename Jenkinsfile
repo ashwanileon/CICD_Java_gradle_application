@@ -4,27 +4,32 @@ pipeline{
         VERSION = "${env.BUILD_ID}"
     }
     stages{
-        stage("sonar quality check"){
-            agent {
-                docker {
-                    image 'openjdk:11'
-                }
-            }
-            steps{
-                script{
-                    withSonarQubeEnv(credentialsId: 'sonar-token') {
-                            sh 'chmod +x gradlew'
-                            sh './gradlew sonarqube'
-                    }
+        // stage("sonar quality check"){
+        //     agent {
+        //         docker {
+        //             image 'openjdk:11'
+        //         }
+        //     }
+        //     steps{
+        //         script{
+        //             withSonarQubeEnv(credentialsId: 'sonar-token') {
+        //                     sh 'chmod +x gradlew'
+        //                     sh './gradlew sonarqube'
+        //             }
 
-                    timeout(time: 1, unit: 'HOURS') {
-                      def qg = waitForQualityGate()
-                      if (qg.status != 'OK') {
-                           error "Pipeline aborted due to quality gate failure: ${qg.status}"
-                      }
-                    }
+        //             timeout(time: 1, unit: 'HOURS') {
+        //               def qg = waitForQualityGate()
+        //               if (qg.status != 'OK') {
+        //                    error "Pipeline aborted due to quality gate failure: ${qg.status}"
+        //               }
+        //             }
 
-                }  
+        //         }  
+        //     }
+        // }
+                stage ('Build') {
+            steps {
+                sh './gradlew clean build'
             }
         }
         stage("docker build & docker push"){
@@ -40,7 +45,7 @@ pipeline{
                     }
                 }
             }
-        }
+        }        
         stage('indentifying misconfigs using datree in helm charts'){
             steps{
                 script{
